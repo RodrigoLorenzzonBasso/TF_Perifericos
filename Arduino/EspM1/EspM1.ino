@@ -1,3 +1,11 @@
+/*
+*
+* Publish temperatura
+* Publish umidade
+* Subscribe motor
+*
+*/
+
 #include <LiquidCrystal.h>
 #include <DHTesp.h>
 #include <Servo.h>
@@ -20,8 +28,6 @@ int dhtPin = 16;
               //rs, enable, d4, d5, d6, d7
 LiquidCrystal lcd(15, 13, 12, 14, 0, 2);
 
-char estado = 0; // 0 fechado 1 aberto
-
 // wifi setup
 const char* ssid = "P30_IOT";
 const char* password = "pucrs@2019";
@@ -34,6 +40,13 @@ const char* mqtt_pass = "embarcados";
 // connecting wifi with mqtt
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// vars
+char humi[30];
+char temp[30];
+float humidity;
+float temperature;
+char str[50];
 
 void setup()
 {
@@ -50,62 +63,32 @@ void loop()
 {
   delay(dht.getMinimumSamplingPeriod());
 
-  float humidity = dht.getHumidity();
-  float temperature = dht.getTemperature();
+  if(!client.connected())
+  {
+    reconnect();
+  }
+  client.loop();
 
-  char temp[30];
-  sprintf(temp,"Temperatura %2.1fC",temperature);
+  humidity = dht.getHumidity();
+  temperature = dht.getTemperature();
 
-  char humi[30];
-  sprintf(humi,"Umidade %2.1f%%",humidity);
+  sprintf(str,"%f",temperature);
+  client.publish("temperatura", str);
+  sprintf(str,"%f",humidity);
+  client.publish("umidade", str);
 
-  Serial.println(humi);
-  Serial.println(temp);
+  // subscribe motor está na função reconnect
+  // fazer algo com o motor
+
+  sprintf(str,"%2.1f%%  %2.1fC",humidity,temperature);
+  Serial.println(str);
 
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print(temp);
+  lcd.print(str);
   lcd.setCursor(0,1);
-  lcd.print(humi);
+  lcd.print(Wifi.localIP());
 
-  ////////////////// Wifi //////////////////////
-
-  WiFiClient server;
-  
-  if (!server.connect(host, port)) {
-    Serial.println("connection failed");
-    return;
-  }
-
-  // connected
-
-  String line = server.readStringUntil(';');
-  Serial.print("Recebido do Servidor: ");
-  Serial.println(line);
-
-  char str[30];
-  sprintf(str,"%02.1f %02.1f;",temperature,humidity);
-
-  server.print(str);
-
-  if(line == "abrir")
-  {
-     if(estado == 0)
-     {
-       gira_motor();
-       estado = 1;
-     } 
-  }
-  else if(line == "fechar")
-  {
-    if(estado == 1)
-    {
-      gira_motor2();
-      estado = 0; 
-     }
-  }
-  
-  ////////////////// Wifi //////////////////////
 }
 
 // Functions
@@ -155,15 +138,16 @@ void setup_wifi()
 
 void reconnect() {
  // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!client.connected())
+  {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("EspM1",mqtt_user,mqtt_pass)) {
+    if (client.connect("espm1", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("temperatura", "hello world");
+      client.publish("comum", "espm1");
       // ... and resubscribe
-      client.subscribe("umidade");
+      client.subscribe("motor");
     } 
     else 
     {

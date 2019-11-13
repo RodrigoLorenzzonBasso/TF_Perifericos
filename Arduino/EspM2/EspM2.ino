@@ -1,95 +1,139 @@
-#include <SoftwareSerial.h>
-#include <ESP8266WiFi.h>
+/*
+*
+* Publish luminosidade
+* Subscribe dimmer
+*
+*/
 
-SoftwareSerial s(14,12,false); // RX, TX
+#include <LiquidCrystal.h>
+
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+void setup_peripherals();
+void setup_wifi();
+void reconnect();
+void callback(char* topic, byte* payload, unsigned int length);
+
+              //rs, enable, d4, d5, d6, d7
+LiquidCrystal lcd(15, 13, 12, 14, 0, 2);
+int ldr_pin = A0
 
 // wifi setup
 const char* ssid = "P30_IOT";
 const char* password = "pucrs@2019";
-int port = 31600;
-WiFiServer server(port);
 
-void setup() {
+// mqtt setup
+const char* mqtt_server = "10.30.152.111";
+const char* mqtt_user = "embarcados";
+const char* mqtt_pass = "embarcados";
+
+// connecting wifi with mqtt
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// vars
+char str[50];
+int ldr_raw;
+float luminosity;
+
+void setup()
+{
   Serial.begin(115200);
-  s.begin(38400);
+
+  setup_peripherals();
+  setup_wifi();
   
-  Serial.println(WiFi.localIP());
-  WiFi.begin(ssid, password);
-  server.begin();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
 }
 
-void loop() {
-
-  ///////////// recepcao do cortex /////////////
-
-  String comando = ";";
-
-  char c = 'x';
-
-  if(s.available() > 0)
+void loop()
+{
+  if(!client.connected())
   {
-     c = s.read();
-     Serial.print("Recebido do Cortex: ")
-     Serial.println(c);
-  } 
-
-  if(c == 'a')
-    comando = "abrir;";
-  else if(c == 'f')
-    comando = "fechar;";
-  else
-    comando = ";";
-
-  //////////////////////////////////////////////
-
-  String line = "x";
-  char connected = 'n';
-
-  ////////////////// Wifi //////////////////////
-  // Check if module is still connected to WiFi.
-  if (WiFi.status() != WL_CONNECTED) {
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-    }
+    reconnect();
   }
+  client.loop();
 
-  WiFiClient client = server.available();
+  ldr_raw = analogRead(ldr_pin);
 
-  if(client)
+  // TODO: converter ldr_raw para valor em lux
+
+  sprintf(str,"%f",luminosity);
+  client.publish("luminosidade", str);
+
+  // subscribe dimmer está na função reconnect
+  // fazer algo com o dimmer
+
+  sprintf(str,"Lumi %4.1f", luminosity);
+  Serial.println(str);
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(str);
+  lcd.setCursor(0,1);
+  lcd.print(espClient.localIP());
+
+}
+
+// Functions
+
+void setup_peripherals()
+{
+  lcd.begin(16, 2);
+  // falta setup do ldr e dimmer da luminaria
+}
+
+void setup_wifi()
+{
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
   {
-    Serial.println("Client connected.");
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.print("LocalIP address: ");
+  Serial.println(WiFi.localIP());
+}
 
-    connected = 's';
-
-    client.print(comando);
-
-    while(client.connected())
+void reconnect() {
+ // Loop until we're reconnected
+  while (!client.connected())
+  {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("espm2", mqtt_user, mqtt_pass)) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("comum", "espm2");
+      // ... and resubscribe
+      client.subscribe("dimmer");
+    } 
+    else 
     {
-      if(client.available())
-      {
-        line = client.readStringUntil(';');
-        Serial.print("Recebido do Cliente: ");
-        Serial.println(line);
-      }
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
     }
-
-    Serial.println("Client disconnected.");
-    client.stop();
   }
-  //////////////////////////////////////////////
+}
 
-  ///////////// reenvio para o cortex //////////
-
-  if(line != "x")
-  {
-    line += " ";
-    line += connected;
-    Serial.print("Enviando para o Cortex: ");
-    Serial.println(line);
-    s.print(line);
+void callback(char* topic, byte* payload, unsigned int length)
+{
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
   }
-  
-  //////////////////////////////////////////////
-  
-
+  Serial.println("");
 }
