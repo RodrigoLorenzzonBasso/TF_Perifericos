@@ -64,7 +64,6 @@ void loop()
   client.publish("luminosidade", str);
 
   // subscribe dimmer está na função reconnect
-  // fazer algo com o dimmer
 
   sprintf(str,"Lumi %4.1f", luminosity);
   Serial.println(str);
@@ -136,4 +135,10 @@ void callback(char* topic, byte* payload, unsigned int length)
     Serial.print((char)payload[i]);
   }
   Serial.println("");
+
+  if(String(topic) == "dimmer")
+  {
+    // faz algo no dimmer
+  }
+
 }

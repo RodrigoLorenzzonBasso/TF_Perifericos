@@ -169,4 +169,9 @@ void callback(char* topic, byte* payload, unsigned int length)
     Serial.print((char)payload[i]);
   }
   Serial.println("");
+
+  if(String(topic) == "motor")
+  {
+    // faz algo com o motor, gira etc
+  }
 }
