@@ -1,14 +1,14 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-07-16T18:01:50
+# Project created by QtCreator 2019-05-23T17:12:09
 #
 #-------------------------------------------------
 
-QT       += core gui serialport
+QT       += core gui network mqtt
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = Serial
+TARGET = mqtt
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
