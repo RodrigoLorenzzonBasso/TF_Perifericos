@@ -61,7 +61,7 @@ void loop()
   // TODO: converter ldr_raw para valor em lux
 
   sprintf(str,"%f",luminosity);
-  client.publish("luminosidade", str);
+  client.publish("basso_luminosidade", str);
 
   // subscribe dimmer está na função reconnect
 
@@ -111,9 +111,9 @@ void reconnect() {
     if (client.connect("espm2", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("comum", "espm2");
+      client.publish("basso_comum", "espm2");
       // ... and resubscribe
-      client.subscribe("dimmer");
+      client.subscribe("basso_dimmer");
     } 
     else 
     {
@@ -136,7 +136,7 @@ void callback(char* topic, byte* payload, unsigned int length)
   }
   Serial.println("");
 
-  if(String(topic) == "dimmer")
+  if(String(topic) == "basso_dimmer")
   {
     // faz algo no dimmer
   }

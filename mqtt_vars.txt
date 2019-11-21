@@ -1,0 +1,7 @@
+basso_umidade
+basso_temperatura
+basso_motor
+basso_luminosidade
+basso_dimmer
+
+basso_comum # só pra testar

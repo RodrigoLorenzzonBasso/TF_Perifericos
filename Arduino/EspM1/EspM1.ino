@@ -73,9 +73,9 @@ void loop()
   temperature = dht.getTemperature();
 
   sprintf(str,"%f",temperature);
-  client.publish("temperatura", str);
+  client.publish("basso_temperatura", str);
   sprintf(str,"%f",humidity);
-  client.publish("umidade", str);
+  client.publish("basso_umidade", str);
 
   // subscribe motor está na função reconnect
   // fazer algo com o motor
@@ -145,9 +145,9 @@ void reconnect() {
     if (client.connect("espm1", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("comum", "espm1");
+      client.publish("basso_comum", "espm1");
       // ... and resubscribe
-      client.subscribe("motor");
+      client.subscribe("basso_motor");
     } 
     else 
     {
@@ -170,7 +170,7 @@ void callback(char* topic, byte* payload, unsigned int length)
   }
   Serial.println("");
 
-  if(String(topic) == "motor")
+  if(String(topic) == "basso_motor")
   {
     // faz algo com o motor, gira etc
   }
