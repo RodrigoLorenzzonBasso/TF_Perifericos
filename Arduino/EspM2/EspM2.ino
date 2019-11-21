@@ -36,6 +36,7 @@ PubSubClient client(espClient);
 char str[50];
 int ldr_raw;
 float luminosity;
+float factor;
 
 void setup()
 {
@@ -58,8 +59,8 @@ void loop()
 
   ldr_raw = analogRead(ldr_pin);
 
-  // TODO: converter ldr_raw para valor em lux
-
+  luminosity = (1024 - ldr_raw) / fator;
+  
   sprintf(str,"%f",luminosity);
   client.publish("basso_luminosidade", str);
 
@@ -82,6 +83,7 @@ void setup_peripherals()
 {
   lcd.begin(16, 2);
   // falta setup do ldr e dimmer da luminaria
+  factor = 9.0;
 }
 
 void setup_wifi()
