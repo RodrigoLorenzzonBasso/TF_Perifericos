@@ -51,46 +51,90 @@ void MainWindow::on_conectaBotao_clicked()
     adafruit_client->connectToHost();
 
      if (adafruit_client->state() == QMqttClient::Disconnected)
-        qDebug("Não conectou");
+        qDebug("Erro ao Conectar");
      else
-        qDebug("Conectou");
+        qDebug("Conectado");
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
     QString topico = "basso_temperatura";
-        auto subscription = m_client->subscribe(topico);
-        if(subscription)
-            qDebug() << "Inscrito com sucesso em: " << topico;
+    auto subscription = m_client->subscribe(topico);
+    if(subscription)
+        qDebug() << "Inscrito com sucesso em: " << topico;
 
-        topico = "basso_umidade";
+    topico = "basso_umidade";
+    subscription = m_client->subscribe(topico);
+    if(subscription)
+        qDebug() << "Inscrito com sucesso em: " << topico;
+        
+    topico = "basso_luminosidade";
+    subscription = m_client->subscribe(topico);
+    if(subscription)
+        qDebug() << "Inscrito com sucesso em: " << topico;
+
+    if (adafruit_client->state() == QMqttClient::Disconnected)
+        qDebug() << "Não está conectado ao adafruit:::";
+    else
+    {
+        topico = "basso_dimmer";
         subscription = m_client->subscribe(topico);
         if(subscription)
-            qDebug() << "Inscrito com sucesso em: " << topico;
+            qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
-        topico = "basso_luminosidade";
+        topico = "basso_motor";
         subscription = m_client->subscribe(topico);
         if(subscription)
-            qDebug() << "Inscrito com sucesso em: " << topico;
+            qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
+    }
+    
 }
 
 void MainWindow::on_pushButton_3_clicked()
 {
+    qDebug() << "Publicando no broker local e no adafruit . . .";
+
     if (m_client->publish(ui->lineEdit_6->text(), ui->lineEdit_7->text().toUtf8()) == -1)
+        QMessageBox::critical(this, QLatin1String("Error"), QLatin1String("Could not publish message"));
+    
+    if (adafruit_client->publish(ui->lineEdit_6->text(), ui->lineEdit_7->text().toUtf8()) == -1)
         QMessageBox::critical(this, QLatin1String("Error"), QLatin1String("Could not publish message"));
 }
 
 void MainWindow::localReceived(const QByteArray &message, const QMqttTopicName &topic)
 {
+    qDebug() << "Mensagem Recebida do Broker Local";
     const QString content = QLatin1String("Topic:")
                 + topic.name()
                 + QLatin1String("\nMessage: ")
                 + message
                 + QLatin1Char('\n');
+    qDebug() << content;
     ui->plainTextEdit->insertPlainText(content);
+
+    qDebug() << "Publicando no Adafruit . . .";
+    QString p_message = message;
+    if (adafruit_client->publish(topic.name(), p_message) == -1)
+    {
+        QMessageBox::critical(this, QLatin1String("Error"), QLatin1String("Could not publish message"));
+    }
 }
 
 void MainWindow::adafruitReceived(const QByteArray &message, const QMqttTopicName &topic)
 {
-    // publica no m_client
+    qDebug() << "Mensagem Recebida do Adafruit";
+    const QString content = QLatin1String("Topic:")
+                + topic.name()
+                + QLatin1String("\nMessage: ")
+                + message
+                + QLatin1Char('\n');
+    qDebug() << content;
+    ui->plainTextEdit->insertPlainText(content);
+
+    qDebug() << "Publicando no broker local . . .";
+    QString p_message = message;
+    if (m_client->publish(topic.name(), p_message) == -1)
+    {
+        QMessageBox::critical(this, QLatin1String("Error"), QLatin1String("Could not publish message"));
+    }
 }
