@@ -47,6 +47,7 @@ char temp[30];
 float humidity;
 float temperature;
 char str[50];
+String local_ip;
 
 void setup()
 {
@@ -87,7 +88,7 @@ void loop()
   lcd.setCursor(0,0);
   lcd.print(str);
   lcd.setCursor(0,1);
-  lcd.print(Wifi.localIP());
+  lcd.print(local_ip);
 
 }
 
@@ -96,7 +97,7 @@ void loop()
 void gira_motor()
 {
   int pos = 0;
-  for(pos = 0; pos < 180; pos++){ //PARA "pos" IGUAL A 0, ENQUANTO "pos" MENOR QUE 180, INCREMENTA "pos"
+  for(pos = 0; pos < 60; pos++){ //PARA "pos" IGUAL A 0, ENQUANTO "pos" MENOR QUE 180, INCREMENTA "pos"
     servo.write(pos); //ESCREVE O VALOR DA POSIÇÃO QUE O SERVO DEVE GIRAR
     delay(15); //INTERVALO DE 15 MILISSEGUNDOS
   }    
@@ -104,8 +105,17 @@ void gira_motor()
 
 void gira_motor2()
 {
-  int pos = 0;
-  for(pos = 180; pos < 0; pos--){ //PARA "pos" IGUAL A 0, ENQUANTO "pos" MENOR QUE 180, INCREMENTA "pos"
+  int pos = 60;
+  for(pos = 60; pos < 120; pos++){ //PARA "pos" IGUAL A 0, ENQUANTO "pos" MENOR QUE 180, INCREMENTA "pos"
+    servo.write(pos); //ESCREVE O VALOR DA POSIÇÃO QUE O SERVO DEVE GIRAR
+    delay(15); //INTERVALO DE 15 MILISSEGUNDOS
+  }    
+}
+
+void gira_motor3()
+{
+  int pos = 120;
+  for(pos = 120; pos < 180; pos++){ //PARA "pos" IGUAL A 0, ENQUANTO "pos" MENOR QUE 180, INCREMENTA "pos"
     servo.write(pos); //ESCREVE O VALOR DA POSIÇÃO QUE O SERVO DEVE GIRAR
     delay(15); //INTERVALO DE 15 MILISSEGUNDOS
   }    
@@ -130,10 +140,13 @@ void setup_wifi()
     delay(500);
     Serial.print(".");
   }
+
+  local_ip = String(WiFi.localIP());
+  
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.print("LocalIP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(local_ip);
 }
 
 void reconnect() {
@@ -172,6 +185,17 @@ void callback(char* topic, byte* payload, unsigned int length)
 
   if(String(topic) == "basso_motor")
   {
-    // faz algo com o motor, gira etc
+    if((int)payload == 1)
+    {
+      gira_motor();
+    }
+    else if((int)payload == 2)
+    {
+      gira_motor2();
+    }
+    else if((int)payload == 3)
+    {
+      gira_motor3();
+    }
   }
 }
