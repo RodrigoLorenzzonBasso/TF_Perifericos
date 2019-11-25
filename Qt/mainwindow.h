@@ -21,6 +21,8 @@ private slots:
     void on_pushButton_3_clicked();
     void on_conectaBotao_clicked();
 
+    void on_horizontalSlider_sliderMoved(int position);
+
 private:
     Ui::MainWindow *ui;
     QMqttClient *m_client;
