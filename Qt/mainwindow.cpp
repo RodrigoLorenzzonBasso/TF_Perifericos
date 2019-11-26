@@ -87,27 +87,27 @@ void MainWindow::on_pushButton_2_clicked()
         qDebug() << "Não está conectado ao adafruit:::";
     else
     {
-        topico = "basso_dimmer";
+        topico = "basso-dimmer";
         subscription = m_client->subscribe(topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
-        topico = "basso_motor";
+        topico = "basso-motor";
         subscription = m_client->subscribe(topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
-        topico = "basso_umidade";
+        topico = "basso-umidade";
         subscription = m_client->subscribe(topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
-        topico = "basso_temperatura";
+        topico = "basso-temperatura";
         subscription = m_client->subscribe(topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
-        topico = "basso_luminosidade";
+        topico = "basso-luminosidade";
         subscription = m_client->subscribe(topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
@@ -144,6 +144,9 @@ void MainWindow::on_pushButton_3_clicked()
     if (m_client->publish(ui->topico->currentText(), valor.toUtf8()) == -1)
         qDebug() << "Erro ao publicar no broker local";
     
+    QString ada_topic = ui->topico->currentText();
+    ada_topic.replace("_","-");
+
     if (adafruit_client->publish(ui->topico->currentText(), valor.toUtf8()) == -1)
         qDebug() << "Erro ao publicar no servidor Adafruit";
 }
@@ -161,7 +164,9 @@ void MainWindow::localReceived(const QByteArray &message, const QMqttTopicName &
 
     qDebug() << "Publicando no Adafruit . . .";
     QString p_message = message;
-    if (adafruit_client->publish(topic.name(), p_message.toUtf8()) == -1)
+    QString ada_topic = topic.name();
+    ada_topic.replace("_","-");
+    if (adafruit_client->publish(ada_topic, p_message.toUtf8()) == -1)
     {
         qDebug() << "Erro ao publicar no servidor Adafruit";
     }
@@ -180,7 +185,9 @@ void MainWindow::adafruitReceived(const QByteArray &message, const QMqttTopicNam
 
     qDebug() << "Publicando no broker local . . .";
     QString p_message = message;
-    if (m_client->publish(topic.name(), p_message.toUtf8()) == -1)
+    QString local_topic = topic.name();
+    local_topic.replace("-","_");
+    if (m_client->publish(local_topic, p_message.toUtf8()) == -1)
     {
         qDebug() << "Erro ao publicar no broker local";
     }
