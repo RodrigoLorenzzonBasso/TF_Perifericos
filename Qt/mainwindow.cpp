@@ -88,27 +88,27 @@ void MainWindow::on_pushButton_2_clicked()
     else
     {
         topico = "basso-dimmer";
-        subscription = m_client->subscribe(topico);
+        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-motor";
-        subscription = m_client->subscribe(topico);
+        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-umidade";
-        subscription = m_client->subscribe(topico);
+        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-temperatura";
-        subscription = m_client->subscribe(topico);
+        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-luminosidade";
-        subscription = m_client->subscribe(topico);
+        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
     }
@@ -147,7 +147,7 @@ void MainWindow::on_pushButton_3_clicked()
     QString ada_topic = ui->topico->currentText();
     ada_topic.replace("_","-");
 
-    if (adafruit_client->publish(ui->topico->currentText(), valor.toUtf8()) == -1)
+    if (adafruit_client->publish("JSLucena/feeds/"+ui->topico->currentText(), valor.toUtf8()) == -1)
         qDebug() << "Erro ao publicar no servidor Adafruit";
 }
 
@@ -166,7 +166,7 @@ void MainWindow::localReceived(const QByteArray &message, const QMqttTopicName &
     QString p_message = message;
     QString ada_topic = topic.name();
     ada_topic.replace("_","-");
-    if (adafruit_client->publish(ada_topic, p_message.toUtf8()) == -1)
+    if (adafruit_client->publish("JSLucena/feeds/"+ada_topic, p_message.toUtf8()) == -1)
     {
         qDebug() << "Erro ao publicar no servidor Adafruit";
     }

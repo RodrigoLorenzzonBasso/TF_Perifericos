@@ -17,14 +17,15 @@ void callback(char* topic, byte* payload, unsigned int length);
 
               //rs, enable, d4, d5, d6, d7
 LiquidCrystal lcd(15, 13, 12, 14, 0, 2);
-int ldr_pin = A0
+int ldr_pin = A0;
+int dimmer_pin = 5;
 
 // wifi setup
 const char* ssid = "P30_IOT";
 const char* password = "pucrs@2019";
 
 // mqtt setup
-const char* mqtt_server = "10.30.152.111";
+const char* mqtt_server = "10.30.157.153";
 const char* mqtt_user = "embarcados";
 const char* mqtt_pass = "embarcados";
 
@@ -36,7 +37,6 @@ PubSubClient client(espClient);
 char str[50];
 int ldr_raw;
 float luminosity;
-float factor;
 
 void setup()
 {
@@ -59,14 +59,12 @@ void loop()
 
   ldr_raw = analogRead(ldr_pin);
 
-  luminosity = (1024 - ldr_raw) / fator;
+  luminosity = (1024 - ldr_raw) / 9;
   
-  sprintf(str,"%f",luminosity);
+  sprintf(str,"%5.2f",luminosity);
   client.publish("basso_luminosidade", str);
 
-  // subscribe dimmer está na função reconnect
-
-  sprintf(str,"Lumi %4.1f", luminosity);
+  sprintf(str,"Lumi %5.2f", luminosity);
   Serial.println(str);
 
   lcd.clear();
@@ -81,9 +79,9 @@ void loop()
 
 void setup_peripherals()
 {
+  Serial.println("Coloca o display");
+  delay(5000);
   lcd.begin(16, 2);
-  // falta setup do ldr e dimmer da luminaria
-  factor = 9.0;
 }
 
 void setup_wifi()
@@ -140,7 +138,11 @@ void callback(char* topic, byte* payload, unsigned int length)
 
   if(String(topic) == "basso_dimmer")
   {
-    // faz algo no dimmer
+    char *end = nullptr;
+    long value = strtol((const char *) payload, &end, 10);
+    Serial.print("Valor convertido:")
+    Serial.println(value);
+    // converter para AD 0 --- 1023
   }
 
 }

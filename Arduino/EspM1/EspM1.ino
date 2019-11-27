@@ -13,6 +13,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
+#include <math.h>
+
 void gira_motor();
 void gira_motor2();
 void setup_peripherals();
@@ -26,14 +28,14 @@ int servoPin = 4;
 DHTesp dht;
 int dhtPin = 16;
               //rs, enable, d4, d5, d6, d7
-LiquidCrystal lcd(15, 13, 12, 14, 0, 2);
+LiquidCrystal lcd(15, 13, 12, 14, 2, 0);
 
 // wifi setup
 const char* ssid = "P30_IOT";
 const char* password = "pucrs@2019";
 
 // mqtt setup
-const char* mqtt_server = "10.30.152.111";
+const char* mqtt_server = "10.30.157.153";
 const char* mqtt_user = "embarcados";
 const char* mqtt_pass = "embarcados";
 
@@ -73,10 +75,12 @@ void loop()
   humidity = dht.getHumidity();
   temperature = dht.getTemperature();
 
-  sprintf(str,"%f",temperature);
-  client.publish("basso_temperatura", str);
-  sprintf(str,"%f",humidity);
-  client.publish("basso_umidade", str);
+  if(!isnan(temperature)){
+    sprintf(str,"%03.2f",temperature);
+    client.publish("basso_temperatura", str);
+    sprintf(str,"%03.2f",humidity);
+    client.publish("basso_umidade", str);
+  }
 
   // subscribe motor está na função reconnect
   // fazer algo com o motor
@@ -125,6 +129,9 @@ void setup_peripherals()
 {
   dht.setup(dhtPin, DHTesp::DHT11); // Connect DHT sensor to GPIO 16
   servo.attach(servoPin);
+  Serial.println("Coloque o display pfv");
+  delay(5000);
+  
   lcd.begin(16, 2);
 }
 
@@ -185,15 +192,15 @@ void callback(char* topic, byte* payload, unsigned int length)
 
   if(String(topic) == "basso_motor")
   {
-    if((int)payload == 1)
+    if((char)payload[0] == '1')
     {
       gira_motor();
     }
-    else if((int)payload == 2)
+    else if((char)payload[0] == '2')
     {
       gira_motor2();
     }
-    else if((int)payload == 3)
+    else if((char)payload[0] == '3')
     {
       gira_motor3();
     }
