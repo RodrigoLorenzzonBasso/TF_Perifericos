@@ -80,19 +80,20 @@ void loop()
     client.publish("basso_temperatura", str);
     sprintf(str,"%03.2f",humidity);
     client.publish("basso_umidade", str);
+
+    sprintf(str,"%2.1f%%  %2.1fC",humidity,temperature);
+    Serial.println(str);
+  
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print(str);
+    lcd.setCursor(0,1);
+    lcd.print(local_ip);
   }
 
   // subscribe motor está na função reconnect
   // fazer algo com o motor
 
-  sprintf(str,"%2.1f%%  %2.1fC",humidity,temperature);
-  Serial.println(str);
-
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print(str);
-  lcd.setCursor(0,1);
-  lcd.print(local_ip);
 
 }
 

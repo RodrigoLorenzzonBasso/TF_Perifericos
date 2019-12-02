@@ -16,7 +16,7 @@ void reconnect();
 void callback(char* topic, byte* payload, unsigned int length);
 
               //rs, enable, d4, d5, d6, d7
-LiquidCrystal lcd(15, 13, 12, 14, 0, 2);
+LiquidCrystal lcd(15, 13, 12, 14, 16, 2);
 int ldr_pin = A0;
 int dimmer_pin = 5;
 
@@ -72,6 +72,8 @@ void loop()
   lcd.print(str);
   lcd.setCursor(0,1);
   lcd.print(espClient.localIP());
+
+  delay(500);
 
 }
 
@@ -140,9 +142,12 @@ void callback(char* topic, byte* payload, unsigned int length)
   {
     char *end = nullptr;
     long value = strtol((const char *) payload, &end, 10);
-    Serial.print("Valor convertido:")
+    Serial.print("Valor convertido:");
     Serial.println(value);
     // converter para AD 0 --- 1023
+    float conv = (value*255.0)/100.0;
+    int c = int(conv);
+    analogWrite(dimmer_pin, c);
   }
 
 }

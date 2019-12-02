@@ -3,11 +3,20 @@
 #include <QtMqtt/QMqttClient>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QDateTime>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    this->temp = "";
+    this->dimmer = "";
+    this->umid = "";
+    this->lumi = "";
+    this->motor = "";
+
+    timer = new QTimer();
+
     ui->setupUi(this);
 
     m_client = new QMqttClient(this);
@@ -15,6 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_client, &QMqttClient::messageReceived, this, &MainWindow::localReceived);
     connect(adafruit_client, &QMqttClient::messageReceived, this, &MainWindow::adafruitReceived);
+    connect(timer, SIGNAL(timeout()),SLOT(publica()));
+
+    timer->start(15000);
 
     ////////// conexao do broker local ////////////////
 
@@ -88,27 +100,27 @@ void MainWindow::on_pushButton_2_clicked()
     else
     {
         topico = "basso-dimmer";
-        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
+        subscription = adafruit_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-motor";
-        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
+        subscription = adafruit_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-umidade";
-        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
+        subscription = adafruit_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-temperatura";
-        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
+        subscription = adafruit_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
 
         topico = "basso-luminosidade";
-        subscription = m_client->subscribe("JSLucena/feeds/"+topico);
+        subscription = adafruit_client->subscribe("JSLucena/feeds/"+topico);
         if(subscription)
             qDebug() << "Adafruit: Inscrito com sucesso em: " << topico;
     }
@@ -151,6 +163,60 @@ void MainWindow::on_pushButton_3_clicked()
         qDebug() << "Erro ao publicar no servidor Adafruit";
 }
 
+void MainWindow::publica()
+{
+    qDebug() << "Publicando no Adafruit . . .";
+
+    QString topico;
+    if(this->temp != "")
+    {
+        topico = "basso_temperatura";
+        if (adafruit_client->publish("JSLucena/feeds/"+topico, this->temp.toUtf8()) == -1)
+        {
+            qDebug() << "Erro ao publicar no servidor Adafruit";
+        }
+        this->temp = "";
+    }
+    if(this->umid != "")
+    {
+        topico = "basso_umidade";
+        if (adafruit_client->publish("JSLucena/feeds/"+topico, this->umid.toUtf8()) == -1)
+        {
+            qDebug() << "Erro ao publicar no servidor Adafruit";
+        }
+        this->umid = "";
+
+    }
+    if(this->lumi != "")
+    {
+        topico = "basso_luminosidade";
+        if (adafruit_client->publish("JSLucena/feeds/"+topico, this->lumi.toUtf8()) == -1)
+        {
+            qDebug() << "Erro ao publicar no servidor Adafruit";
+        }
+        this->lumi = "";
+
+    }
+    if(this->dimmer != "")
+    {
+        topico = "basso_dimmer";
+        if (adafruit_client->publish("JSLucena/feeds/"+topico, this->dimmer.toUtf8()) == -1)
+        {
+            qDebug() << "Erro ao publicar no servidor Adafruit";
+        }
+        this->dimmer = "";
+    }
+    if(this->motor != "")
+    {
+        topico = "basso_motor";
+        if (adafruit_client->publish("JSLucena/feeds/"+topico, this->motor.toUtf8()) == -1)
+        {
+            qDebug() << "Erro ao publicar no servidor Adafruit";
+        }
+        this->motor = "";
+    }
+}
+
 void MainWindow::localReceived(const QByteArray &message, const QMqttTopicName &topic)
 {
     qDebug() << "Mensagem Recebida do Broker Local";
@@ -162,14 +228,16 @@ void MainWindow::localReceived(const QByteArray &message, const QMqttTopicName &
     qDebug() << content;
     ui->plainTextEdit->insertPlainText(content);
 
-    qDebug() << "Publicando no Adafruit . . .";
-    QString p_message = message;
-    QString ada_topic = topic.name();
-    ada_topic.replace("_","-");
-    if (adafruit_client->publish("JSLucena/feeds/"+ada_topic, p_message.toUtf8()) == -1)
-    {
-        qDebug() << "Erro ao publicar no servidor Adafruit";
-    }
+    if(topic.name() == "basso_temperatura")
+        this->temp = message;
+    else if(topic.name() == "basso_umidade")
+        this->umid = message;
+    else if(topic.name() == "basso_luminosidade")
+        this->lumi = message;
+    else if(topic.name() == "basso_dimmer")
+        this->dimmer = message;
+    else if(topic.name() == "basso_motor")
+        this->motor = message;
 }
 
 void MainWindow::adafruitReceived(const QByteArray &message, const QMqttTopicName &topic)
@@ -187,6 +255,10 @@ void MainWindow::adafruitReceived(const QByteArray &message, const QMqttTopicNam
     QString p_message = message;
     QString local_topic = topic.name();
     local_topic.replace("-","_");
+    QStringList pieces = local_topic.split( "/" );
+    QString neededWord = pieces.value( pieces.length() - 1 );
+    qDebug() << "MEUDEUASDHDSFHSAHU " + neededWord;
+    local_topic = neededWord;
     if (m_client->publish(local_topic, p_message.toUtf8()) == -1)
     {
         qDebug() << "Erro ao publicar no broker local";
